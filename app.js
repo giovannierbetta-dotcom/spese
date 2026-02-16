@@ -8,6 +8,9 @@ let chartInstance = null;
 
 const $ = (id) => document.getElementById(id);
 
+// =====================
+// Storage
+// =====================
 function load() {
   return JSON.parse(localStorage.getItem("expenses") || "[]");
 }
@@ -16,11 +19,11 @@ function saveAll(arr) {
   localStorage.setItem("expenses", JSON.stringify(arr));
 }
 
+// =====================
+// Helpers
+// =====================
 function fmtEUR(n) {
-  return new Intl.NumberFormat("it-IT", {
-    style:"currency",
-    currency:"EUR"
-  }).format(n);
+  return new Intl.NumberFormat("it-IT", { style:"currency", currency:"EUR" }).format(n);
 }
 
 function parseAmount(s) {
@@ -30,6 +33,9 @@ function parseAmount(s) {
   return Number.isFinite(n) ? n : null;
 }
 
+// =====================
+// UI - Categories
+// =====================
 function renderCats() {
   const grid = $("catGrid");
   grid.innerHTML = "";
@@ -42,13 +48,15 @@ function renderCats() {
   });
 }
 
+// =====================
+// Totals
+// =====================
 function monthTotal(items) {
   const now = new Date();
   return items
     .filter(x => {
       const d = new Date(x.date);
-      return d.getMonth() === now.getMonth() &&
-             d.getFullYear() === now.getFullYear();
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
     })
     .reduce((s,x)=> s + x.amount, 0);
 }
@@ -57,16 +65,16 @@ function getThisMonth(items) {
   const now = new Date();
   return items.filter(x => {
     const d = new Date(x.date);
-    return d.getMonth() === now.getMonth() &&
-           d.getFullYear() === now.getFullYear();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   });
 }
 
+// =====================
+// Chart
+// =====================
 function groupByCategory(items) {
   const map = new Map();
-  items.forEach(x => {
-    map.set(x.category, (map.get(x.category) || 0) + x.amount);
-  });
+  items.forEach(x => map.set(x.category, (map.get(x.category) || 0) + x.amount));
   return { labels:[...map.keys()], values:[...map.values()] };
 }
 
@@ -93,36 +101,109 @@ function renderChart() {
   const items = getThisMonth(load());
   const data = (mode === "day") ? groupByDay(items) : groupByCategory(items);
 
-  const ctx = document.getElementById("chart");
-  if (!ctx) return;
+  const canvas = document.getElementById("chart");
+  if (!canvas) return;
 
   if (chartInstance) chartInstance.destroy();
 
-  chartInstance = new Chart(ctx, {
+  chartInstance = new Chart(canvas, {
     type: mode === "day" ? "line" : "bar",
-    data: {
-      labels: data.labels,
-      datasets: [{
-        data: data.values
-      }]
-    },
+    data: { labels: data.labels, datasets: [{ data: data.values }] },
     options: {
       responsive: true,
       plugins: { legend: { display: false } },
       scales: {
-        y: {
-          ticks: {
-            callback: (v) => "€" + v
-          }
-        }
+        y: { ticks: { callback: (v) => "€" + v } }
       }
     }
   });
 }
 
+// =====================
+// Google Sheets Sync (append-only)
+// =====================
+function getSyncSettings() {
+  return {
+    enabled: localStorage.getItem("syncEnabled") === "true",
+    url: localStorage.getItem("syncUrl") || "",
+    token: localStorage.getItem("syncToken") || ""
+  };
+}
+
+function setSyncSettings({ enabled, url, token }) {
+  if (typeof enabled === "boolean") localStorage.setItem("syncEnabled", enabled ? "true" : "false");
+  if (typeof url === "string") localStorage.setItem("syncUrl", url.trim());
+  if (typeof token === "string") localStorage.setItem("syncToken", token.trim());
+}
+
+async function syncSend(eventName, expenseObj) {
+  const s = getSyncSettings();
+  if (!s.enabled || !s.url || !s.token) return;
+
+  const payload = {
+    token: s.token,
+    event: eventName, // "ADD" / "DELETE"
+    ...expenseObj
+  };
+
+  try {
+    // no-cors per evitare problemi CORS con Apps Script
+    await fetch(s.url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  } catch (e) {
+    console.error("Sync error", e);
+  }
+}
+
+function syncInitUI() {
+  const s = getSyncSettings();
+
+  const urlEl = $("syncUrl");
+  const tokenEl = $("syncToken");
+  const enableBtn = $("syncEnable");
+  const testBtn = $("syncTest");
+
+  if (!urlEl || !tokenEl || !enableBtn || !testBtn) return;
+
+  urlEl.value = s.url;
+  tokenEl.value = s.token;
+  enableBtn.textContent = s.enabled ? "Sync: ON" : "Sync: OFF";
+
+  urlEl.addEventListener("change", () => setSyncSettings({ url: urlEl.value }));
+  tokenEl.addEventListener("change", () => setSyncSettings({ token: tokenEl.value }));
+
+  enableBtn.addEventListener("click", () => {
+    const cur = getSyncSettings();
+    const next = !cur.enabled;
+    setSyncSettings({ enabled: next });
+    enableBtn.textContent = next ? "Sync: ON" : "Sync: OFF";
+    if (next) alert("Sync attivato! Ora ogni Salva/Elimina va su Google Sheets.");
+  });
+
+  testBtn.addEventListener("click", async () => {
+    setSyncSettings({ url: urlEl.value, token: tokenEl.value });
+    const testExpense = {
+      id: "TEST-" + Date.now(),
+      date: new Date().toISOString(),
+      amount: 0,
+      category: "TEST",
+      pay: "N/A",
+      note: "Test sync"
+    };
+    await syncSend("ADD", testExpense);
+    alert("Test inviato. Apri il foglio Google e controlla che sia apparsa una riga.");
+  });
+}
+
+// =====================
+// List
+// =====================
 function renderList() {
   const items = load().sort((a,b)=> new Date(b.date) - new Date(a.date));
-
   $("monthTotal").textContent = fmtEUR(monthTotal(items));
 
   const list = $("list");
@@ -130,6 +211,8 @@ function renderList() {
 
   if (items.length === 0) {
     list.innerHTML = `<div class="meta" style="padding:12px 0;">Nessuna spesa ancora.</div>`;
+    renderChart();
+    return;
   }
 
   items.forEach((x, index) => {
@@ -140,14 +223,12 @@ function renderList() {
       <div>
         <div style="font-weight:700">${x.category}</div>
         <div class="meta">
-          ${d.toLocaleString("it-IT")} • ${x.pay}
-          ${x.note ? " • " + x.note : ""}
+          ${d.toLocaleString("it-IT")} • ${x.pay}${x.note ? " • " + x.note : ""}
         </div>
       </div>
       <div style="text-align:right">
         <div class="amount">${fmtEUR(x.amount)}</div>
-        <div class="meta" style="cursor:pointer;color:#ff4d4d"
-             onclick="deleteExpense(${index})">
+        <div class="meta" style="cursor:pointer;color:#ff4d4d" onclick="deleteExpense(${index})">
           Elimina
         </div>
       </div>
@@ -158,35 +239,46 @@ function renderList() {
   renderChart();
 }
 
-function deleteExpense(index) {
-  if (!confirm("Eliminare questa spesa?")) return;
-  const items = load().sort((a,b)=> new Date(b.date) - new Date(a.date));
-  items.splice(index,1);
-  saveAll(items);
-  renderList();
-}
-
+// =====================
+// Actions
+// =====================
 function addExpense() {
   const amount = parseAmount($("amount").value);
-  if (amount === null) {
-    alert("Importo non valido");
-    return;
-  }
+  if (amount === null) { alert("Importo non valido"); return; }
 
-  const arr = load();
-  arr.push({
+  const expense = {
     id: Date.now(),
     date: new Date().toISOString(),
     amount,
     category: activeCategory,
     pay: $("pay").value,
     note: $("note").value.trim()
-  });
+  };
 
+  const arr = load();
+  arr.push(expense);
   saveAll(arr);
+
+  // Sync
+  syncSend("ADD", expense);
 
   $("amount").value = "";
   $("note").value = "";
+
+  renderList();
+}
+
+function deleteExpense(index) {
+  if (!confirm("Eliminare questa spesa?")) return;
+
+  const items = load().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  const removed = items[index];
+
+  items.splice(index, 1);
+  saveAll(items);
+
+  // Sync
+  if (removed) syncSend("DELETE", removed);
 
   renderList();
 }
@@ -207,8 +299,12 @@ function exportXlsx() {
   XLSX.writeFile(wb, "spese.xlsx");
 }
 
+// =====================
+// Wire up
+// =====================
 $("save").onclick = addExpense;
 $("exportXlsx").onclick = exportXlsx;
+
 $("clearAll").onclick = () => {
   if (confirm("Sicuro di cancellare tutto?")) {
     localStorage.removeItem("expenses");
@@ -218,5 +314,7 @@ $("clearAll").onclick = () => {
 
 $("chartMode")?.addEventListener("change", renderChart);
 
+// Init
 renderCats();
 renderList();
+syncInitUI();
