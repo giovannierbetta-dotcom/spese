@@ -41,24 +41,27 @@
       <button id="exportXlsx" class="secondary">Export Excel</button>
       <button id="clearAll" class="secondary">Svuota</button>
     </div>
-<div class="card" style="margin-top:14px;">
-  <div style="font-weight:800;margin-bottom:8px;">Backup Google Sheets</div>
 
-  <label class="meta" style="display:block;margin:8px 0 6px;">Webhook URL (Apps Script)</label>
-  <input id="syncUrl" placeholder="https://script.google.com/macros/s/....../exec" />
+    <!-- Backup Google Sheets -->
+    <div class="card" style="margin-top:14px;">
+      <div style="font-weight:800;margin-bottom:8px;">Backup Google Sheets</div>
 
-  <label class="meta" style="display:block;margin:8px 0 6px;">Token</label>
-  <input id="syncToken" placeholder="il token che hai messo nello script" />
+      <label class="meta" style="display:block;margin:8px 0 6px;">Webhook URL (Apps Script)</label>
+      <input id="syncUrl" placeholder="https://script.google.com/macros/s/....../exec" />
 
-  <div class="row" style="margin-top:10px;">
-    <button id="syncEnable" class="secondary">Sync: OFF</button>
-    <button id="syncTest" class="secondary">Test</button>
-  </div>
+      <label class="meta" style="display:block;margin:8px 0 6px;">Token</label>
+      <input id="syncToken" placeholder="il token che hai messo nello script" />
 
-  <div class="small">Quando Sync è ON: ogni Salva/Elimina viene inviato al foglio.</div>
-</div>
+      <div class="row" style="margin-top:10px;">
+        <button id="syncEnable" class="secondary">Sync: OFF</button>
+        <button id="syncTest" class="secondary">Test</button>
+      </div>
 
-    <div class="card">
+      <div class="small">Quando Sync è ON: ogni Salva/Elimina viene inviato al foglio (append-only: ADD/DELETE).</div>
+    </div>
+
+    <!-- Inserimento -->
+    <div class="card" style="margin-top:14px;">
       <div class="row">
         <input id="amount" inputmode="decimal" placeholder="Importo (es. 12,50)" />
         <select id="pay">
@@ -75,7 +78,7 @@
       <div class="small">Tip: tocca una categoria → inserisci importo → Salva. Funziona anche offline.</div>
     </div>
 
-    <!-- ✅ NUOVA CARD: GRAFICO MENSILE -->
+    <!-- Grafico -->
     <div class="card" style="margin-top:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center; gap:10px;">
         <div style="font-weight:800;">Grafico (mese)</div>
@@ -89,7 +92,7 @@
       </div>
     </div>
 
-    <!-- LISTA + TOTALE -->
+    <!-- Lista + Totale -->
     <div class="card list" style="margin-top:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div style="font-weight:800;">Movimenti</div>
@@ -101,10 +104,9 @@
 
   <!-- XLSX -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- ✅ Chart.js -->
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <script src="app.js"></script>
 </body>
 </html>
-
