@@ -41,6 +41,22 @@
       <button id="exportXlsx" class="secondary">Export Excel</button>
       <button id="clearAll" class="secondary">Svuota</button>
     </div>
+<div class="card" style="margin-top:14px;">
+  <div style="font-weight:800;margin-bottom:8px;">Backup Google Sheets</div>
+
+  <label class="meta" style="display:block;margin:8px 0 6px;">Webhook URL (Apps Script)</label>
+  <input id="syncUrl" placeholder="https://script.google.com/macros/s/....../exec" />
+
+  <label class="meta" style="display:block;margin:8px 0 6px;">Token</label>
+  <input id="syncToken" placeholder="il token che hai messo nello script" />
+
+  <div class="row" style="margin-top:10px;">
+    <button id="syncEnable" class="secondary">Sync: OFF</button>
+    <button id="syncTest" class="secondary">Test</button>
+  </div>
+
+  <div class="small">Quando Sync è ON: ogni Salva/Elimina viene inviato al foglio.</div>
+</div>
 
     <div class="card">
       <div class="row">
@@ -91,3 +107,4 @@
   <script src="app.js"></script>
 </body>
 </html>
+
