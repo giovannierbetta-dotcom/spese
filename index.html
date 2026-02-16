@@ -4,8 +4,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
   <title>Spese</title>
+
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#0a84ff">
+
   <style>
     :root { font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-serif; }
     body { margin:0; background:#0b0b0f; color:#fff; }
@@ -30,6 +32,7 @@
     .small { font-size:12px; color:#b9b9d6; margin-top:10px; }
   </style>
 </head>
+
 <body>
   <div class="wrap">
     <h1>Spese</h1>
@@ -56,6 +59,21 @@
       <div class="small">Tip: tocca una categoria → inserisci importo → Salva. Funziona anche offline.</div>
     </div>
 
+    <!-- ✅ NUOVA CARD: GRAFICO MENSILE -->
+    <div class="card" style="margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center; gap:10px;">
+        <div style="font-weight:800;">Grafico (mese)</div>
+        <select id="chartMode" style="max-width:190px;">
+          <option value="category">Per categoria</option>
+          <option value="day">Per giorno</option>
+        </select>
+      </div>
+      <div style="margin-top:10px;">
+        <canvas id="chart" height="140"></canvas>
+      </div>
+    </div>
+
+    <!-- LISTA + TOTALE -->
     <div class="card list" style="margin-top:14px;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
         <div style="font-weight:800;">Movimenti</div>
@@ -65,8 +83,11 @@
     </div>
   </div>
 
-  <!-- Libreria per generare XLSX in browser -->
+  <!-- XLSX -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- ✅ Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
   <script src="app.js"></script>
 </body>
 </html>
