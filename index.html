@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Spese</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0a84ff">
+  <style>
+    :root { font-family: -apple-system, system-ui, Segoe UI, Roboto, sans-serif; }
+    body { margin:0; background:#0b0b0f; color:#fff; }
+    .wrap { max-width:520px; margin:0 auto; padding:16px 16px 28px; }
+    .card { background:#161622; border:1px solid #2a2a3a; border-radius:18px; padding:14px; }
+    h1 { font-size:22px; margin:10px 0 14px; }
+    .row { display:flex; gap:10px; }
+    input, select, button {
+      width:100%; padding:14px; border-radius:14px; border:1px solid #2a2a3a;
+      background:#10101a; color:#fff; font-size:16px; outline:none;
+    }
+    button { background:#0a84ff; border:none; font-weight:700; }
+    button.secondary { background:#2a2a3a; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:10px; }
+    .pill { background:#10101a; border:1px solid #2a2a3a; border-radius:14px; padding:12px; text-align:center; }
+    .pill.active { border-color:#0a84ff; box-shadow:0 0 0 2px rgba(10,132,255,.25) inset; }
+    .list { margin-top:12px; }
+    .item { display:flex; justify-content:space-between; gap:10px; padding:12px 10px; border-bottom:1px solid #24243a; }
+    .meta { color:#b9b9d6; font-size:12px; margin-top:2px; }
+    .amount { font-weight:800; }
+    .topbar { display:flex; gap:10px; margin-bottom:10px; }
+    .small { font-size:12px; color:#b9b9d6; margin-top:10px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Spese</h1>
+
+    <div class="topbar">
+      <button id="exportXlsx" class="secondary">Export Excel</button>
+      <button id="clearAll" class="secondary">Svuota</button>
+    </div>
+
+    <div class="card">
+      <div class="row">
+        <input id="amount" inputmode="decimal" placeholder="Importo (es. 12,50)" />
+        <select id="pay">
+          <option value="Carta">Carta</option>
+          <option value="Contanti">Contanti</option>
+        </select>
+      </div>
+
+      <div class="grid" id="catGrid"></div>
+
+      <input id="note" placeholder="Nota (opzionale)" style="margin-top:10px;" />
+      <button id="save" style="margin-top:12px;">Salva</button>
+
+      <div class="small">Tip: tocca una categoria → inserisci importo → Salva. Funziona anche offline.</div>
+    </div>
+
+    <div class="card list" style="margin-top:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div style="font-weight:800;">Movimenti</div>
+        <div id="monthTotal" class="amount"></div>
+      </div>
+      <div id="list"></div>
+    </div>
+  </div>
+
+  <!-- Libreria per generare XLSX in browser -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
