@@ -115,5 +115,68 @@ function exportXlsx() {
 $("save").onclick = addExpense;
 $("exportXlsx").onclick = exportXlsx;
 
+let chartInstance = null;
+
+function getThisMonth(items) {
+  const now = new Date();
+  return items.filter(x => {
+    const d = new Date(x.date);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+}
+
+function groupByCategory(items) {
+  const m = new Map();
+  items.forEach(x => m.set(x.category, (m.get(x.category) || 0) + x.amount));
+  return { labels: [...m.keys()], values: [...m.values()] };
+}
+
+function groupByDay(items) {
+  const m = new Map();
+  items.forEach(x => {
+    const d = new Date(x.date);
+    const key = d.toLocaleDateString("it-IT", { day:"2-digit", month:"2-digit" });
+    m.set(key, (m.get(key) || 0) + x.amount);
+  });
+  const labels = [...m.keys()];
+  // ordina per giorno (approssimazione robusta per mese corrente)
+  labels.sort((a,b) => {
+    const [da,ma] = a.split("/").map(Number);
+    const [db,mb] = b.split("/").map(Number);
+    return (ma*100+da) - (mb*100+db);
+  });
+  return { labels, values: labels.map(k => m.get(k)) };
+}
+
+function renderChart() {
+  const mode = $("chartMode")?.value || "category";
+  const items = getThisMonth(load());
+  const data = (mode === "day") ? groupByDay(items) : groupByCategory(items);
+
+  const ctx = document.getElementById("chart");
+  if (!ctx) return;
+
+  if (chartInstance) chartInstance.destroy();
+
+  chartInstance = new Chart(ctx, {
+    type: mode === "day" ? "line" : "bar",
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: mode === "day" ? "Spesa per giorno" : "Spesa per categoria",
+        data: data.values
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: { y: { ticks: { callback: (v) => "€" + v } } }
+    }
+  });
+}
+
+
+
 renderCats();
 renderList();
+
